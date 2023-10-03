@@ -11,11 +11,144 @@ datasource db {
 }
 
 model User {
-  id           Int     @id @default(autoincrement())
-  email        String  @unique
-  password     String
-  first_name   String
-  last_name    String
-  other_names  String?
-  phone_number String  @unique
+  id                         Int                   @id @default(autoincrement())
+  email                      String                @unique
+  password                   String
+  first_name                 String
+  last_name                  String
+  other_names                String?
+  dob                        DateTime
+  phone_number               String                @unique
+  organization_year_group_id Int
+  organization_year_group    OrganizationYearGroup @relation(fields: [organization_year_group_id], references: [id])
+  role                       Role                  @default(USER)
+  Event                      Event[]
+  Comments                   Comments[]
+  Likes                      Likes[]
+  createdAt                  DateTime              @default(now())
+  verifiedAt                 DateTime              @default(now())
+  updatedAt                  DateTime?             @updatedAt
+  EventContributions         EventContributions[]
+  Donations                  Donations[]
+}
+
+model Organization {
+  id                    Int                     @id @default(autoincrement())
+  name                  String                  @unique
+  logo                  String?
+  country               String
+  sub_region            String
+  type                  OrganizationType
+  email                 String?                 @unique
+  color                 String?
+  OrganizationYearGroup OrganizationYearGroup[]
+}
+
+model OrganizationYearGroup {
+  id              Int          @id @default(autoincrement())
+  year            String
+  organization_id Int
+  organization    Organization @relation(fields: [organization_id], references: [id])
+  User            User[]
+  Donations       Donations[]
+
+  @@unique([year, organization_id], name: "OrganizationYearGroupIdentifier")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum OrganizationType {
+  TETIARY
+  SECONDARY
+  BASIC
+}
+
+enum PaymentStatus {
+  success
+  declined
+  failed
+  pending
+}
+
+enum PaymentProvider {
+  paystack
+}
+
+model Event {
+  id                 Int                  @id @default(autoincrement())
+  topic              String
+  body               String
+  image              String?
+  date               DateTime?
+  isDonatable        Boolean              @default(false)
+  user_id            Int
+  user               User                 @relation(fields: [user_id], references: [id])
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime?            @updatedAt
+  Comments           Comments[]
+  Likes              Likes[]
+  Tag                Tag[]                @relation("tagtoevent")
+  EventContributions EventContributions[]
+}
+
+model Comments {
+  id           Int      @id @default(autoincrement())
+  comment      String
+  user_id      Int
+  createdDate  DateTime @default(now())
+  modifiedDate DateTime @updatedAt
+  by           User     @relation(fields: [user_id], references: [id])
+  event_id     Int
+  event        Event    @relation(fields: [event_id], references: [id])
+}
+
+model Likes {
+  like     Boolean
+  user_id  Int
+  user     User    @relation(fields: [user_id], references: [id])
+  event_id Int
+  event    Event   @relation(fields: [event_id], references: [id])
+
+  @@unique([user_id, event_id], name: "LikesIdentifier")
+}
+
+model EventContributions {
+  transaction_id                  String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  amount                          Int
+  user_id                         Int
+  user                            User            @relation(fields: [user_id], references: [id])
+  event_id                        Int
+  event                           Event           @relation(fields: [event_id], references: [id])
+  status                          PaymentStatus   @default(pending)
+  createdAt                       DateTime        @default(now())
+  updatedAt                       DateTime        @updatedAt
+  channel                         String?
+  payment_provider                PaymentProvider @default(paystack)
+  payment_provider_transaction_id String?
+}
+
+model Donations {
+  transaction_id                  String                @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  amount                          Int
+  user_id                         Int
+  user                            User                  @relation(fields: [user_id], references: [id])
+  organization_year_group_id      Int
+  organization_year_group         OrganizationYearGroup @relation(fields: [organization_year_group_id], references: [id])
+  status                          PaymentStatus         @default(pending)
+  createdAt                       DateTime              @default(now())
+  updatedAt                       DateTime              @updatedAt
+  channel                         String?
+  payment_provider                PaymentProvider       @default(paystack)
+  payment_provider_transaction_id String?
+}
+
+model Tag {
+  id           Int      @id @default(autoincrement())
+  createdDate  DateTime @default(now())
+  modifiedDate DateTime @updatedAt
+  tag          String   @unique
+  events       Event[]  @relation("tagtoevent")
 }

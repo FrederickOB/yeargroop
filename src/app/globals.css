@@ -25,3 +25,15 @@ body {
     )
     rgb(var(--background-start-rgb));
 }
+
+@keyframes ripple {
+  to {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* Add the animation to the ripple element */
+.animate-ripple {
+  animation: ripple 0.5s linear;
+}
