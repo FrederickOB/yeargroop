@@ -21,7 +21,7 @@ export const POST = async (req: Request) => {
       },
       data: donationRes,
     });
-    console.log(green(response));
+    console.log(green(JSON.stringify(response)));
     const paymentProviderResponse = await fetch(
       `${process.env.PAYMENT_URL}/transaction/initialize`,
       {
@@ -47,21 +47,8 @@ export const POST = async (req: Request) => {
       { status: 200 }
     );
   } catch (error) {
-    console.log(red(error));
+    console.log(red(JSON.stringify(error)));
 
     return NextResponse.json(error, { status: 500 });
   }
 };
-// export const POST = async (req: Request) => {
-//   try {
-//     const tagRes: Tag = await req.json();
-
-//     const response: Tag = await prisma.tag.create({
-//       data: tagRes,
-//     });
-
-//     return NextResponse.json(response, { status: 201 });
-//   } catch (error) {
-//     NextResponse.json(error, { status: 500 });
-//   }
-// };
